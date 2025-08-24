@@ -14,10 +14,6 @@ type Disk interface {
 	io.Closer
 }
 
-func OpenDisk(path string) (Disk, error) {
-	return openDisk(path)
-}
-
 func Format(devicePath, label string) error {
 	_ = exec.Command("umount", "-f", PartitionPath(devicePath, 1)).Run()
 
