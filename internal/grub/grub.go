@@ -63,30 +63,25 @@ func WriteConfig(mountPoint string, isoPaths []string) error {
 func pickTemplateForISO(lowerBase string, templateMap map[string]*template.Template) *template.Template {
 	switch {
 	case strings.Contains(lowerBase, "debian"),
-		strings.Contains(lowerBase, "linuxmint"),
-		strings.Contains(lowerBase, "elementary"):
+		strings.Contains(lowerBase, "linuxmint"):
 		return templateMap["debian"]
 
 	case strings.Contains(lowerBase, "pop-os"),
 		strings.Contains(lowerBase, "ubuntu"):
 		return templateMap["pop-os"]
 
+	case strings.Contains(lowerBase, "manjaro"):
+		return templateMap["manjaro"]
+
 	case strings.Contains(lowerBase, "arch"),
-		strings.Contains(lowerBase, "archlinux"),
-		strings.Contains(lowerBase, "endeavouros"),
-		strings.Contains(lowerBase, "manjaro"):
+		strings.Contains(lowerBase, "archlinux"):
 		return templateMap["arch"]
 
 	case strings.Contains(lowerBase, "fedora"),
-		strings.Contains(lowerBase, "centos"),
-		strings.Contains(lowerBase, "rhel"),
-		strings.Contains(lowerBase, "rocky"),
-		strings.Contains(lowerBase, "almalinux"):
+		strings.Contains(lowerBase, "centos"):
 		return templateMap["fedora"]
 
 	case strings.Contains(lowerBase, "opensuse"),
-		strings.Contains(lowerBase, "tumbleweed"),
-		strings.Contains(lowerBase, "leap"),
 		strings.Contains(lowerBase, "suse"):
 		return templateMap["opensuse"]
 
