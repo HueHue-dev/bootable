@@ -65,9 +65,11 @@ func pickTemplateForISO(lowerBase string, templateMap map[string]*template.Templ
 	case strings.Contains(lowerBase, "ubuntu"),
 		strings.Contains(lowerBase, "debian"),
 		strings.Contains(lowerBase, "linuxmint"),
-		strings.Contains(lowerBase, "pop-os"),
 		strings.Contains(lowerBase, "elementary"):
-		return templateMap["debianBased"]
+		return templateMap["debian"]
+
+	case strings.Contains(lowerBase, "pop-os"):
+		return templateMap["pop-os"]
 
 	case strings.Contains(lowerBase, "arch"),
 		strings.Contains(lowerBase, "archlinux"),
