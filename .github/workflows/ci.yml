@@ -18,5 +18,9 @@ jobs:
       with:
         go-version: '1.18'
 
-    - name: Build
-      run: go build -v ./...
+    - name: Build linux-amd64
+      run: go build -o bootable-linux-amd64 .
+
+    - name: Build windows-amd64
+      run: GOOS=windows GOARCH=amd64 go build -o bootable-windows-amd64.exe .
+
