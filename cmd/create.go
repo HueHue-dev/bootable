@@ -1,16 +1,16 @@
 package cmd
 
 import (
-	"bootable/internal/helper"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/cobra"
+
 	"bootable/internal/disk"
 	"bootable/internal/grub"
-
-	"github.com/spf13/cobra"
+	"bootable/internal/helper"
 )
 
 var (
@@ -43,7 +43,7 @@ var createCmd = &cobra.Command{
 		fmt.Scanln(&consent)
 		if consent != "y" && consent != "Y" {
 			fmt.Println("Operation canceled.")
-			return
+			os.Exit(1)
 		}
 
 		fmt.Println("Partitioning and formatting device...")

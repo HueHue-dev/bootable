@@ -2,17 +2,11 @@ package disk
 
 import (
 	"fmt"
-	"io"
 	"os/exec"
 	"time"
 
 	"bootable/internal/helper"
 )
-
-type Disk interface {
-	WriteAt(p []byte, off int64) (n int, err error)
-	io.Closer
-}
 
 func Format(devicePath, label string) error {
 	_ = exec.Command("umount", "-f", PartitionPath(devicePath, 1)).Run()
