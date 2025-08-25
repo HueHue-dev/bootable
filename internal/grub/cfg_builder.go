@@ -3,7 +3,6 @@ package grub
 import (
 	"embed"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,9 +23,8 @@ type CFGBuilder struct {
 	mountPoint      string
 	isoPaths        []string
 	grubTemplatesFS embed.FS
-	file            *os.File
+	cfgFile         *os.File
 	grubCfgPath     string
-	templateMap     map[string]*template.Template
 }
 
 func NewCFGBuilder() *CFGBuilder {
@@ -58,62 +56,40 @@ func (b *CFGBuilder) createGrubCfgFile() error {
 	if err != nil {
 		return err
 	}
-	b.file = f
+	b.cfgFile = f
 	return nil
 }
 
 func (b *CFGBuilder) insertHeaderTemplate() error {
-	headerTemplate, err := getRawTemplate("header.tpl", b.grubTemplatesFS)
+	headerTemplate, err := b.getRawTemplate("header.tpl")
 	if err != nil {
 		return fmt.Errorf("error getting header template: %w", err)
 	}
 
-	_, err = b.file.WriteString(headerTemplate + "\n")
+	_, err = b.cfgFile.WriteString(headerTemplate + "\n")
 	return err
 }
 
-func (b *CFGBuilder) loadTemplates() error {
-	b.templateMap = make(map[string]*template.Template)
-	err := fs.WalkDir(b.grubTemplatesFS, "templates", func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if !d.IsDir() && strings.HasSuffix(d.Name(), ".tpl") {
-			content, err := b.grubTemplatesFS.ReadFile(path)
-			if err != nil {
-				return err
-			}
-			tmplName := strings.TrimSuffix(d.Name(), ".tpl")
-			tmpl, err := template.New(tmplName).Parse(string(content))
-			if err != nil {
-				return err
-			}
-			b.templateMap[tmplName] = tmpl
-		}
-		return nil
-	})
+func (b *CFGBuilder) loadTemplate(tmplKey TemplateKey) *template.Template {
+	tmplName := string(tmplKey.Distro) + "-" + string(tmplKey.Arch)
 
+	tmplContent, err := b.getRawTemplate(tmplName + ".tpl")
 	if err != nil {
-		return fmt.Errorf("failed to load templates: %w", err)
+		panic(fmt.Sprintf("Failed to load any GRUB template: %v. This should not happen.", tmplName))
 	}
-	return nil
+	tmpl, err := template.New(tmplName).Parse(tmplContent)
+
+	return tmpl
 }
 
 func (b *CFGBuilder) insertIsoSpecificTemplates() error {
-	if b.templateMap == nil {
-		if err := b.loadTemplates(); err != nil {
-			return err
-		}
-	}
-
 	for _, iso := range b.isoPaths {
 		base := filepath.Base(iso)
 		title := fmt.Sprintf("Boot ISO: %s", base)
 
-		tmpl := pickTemplateForISO(strings.ToLower(base), b.templateMap)
-		if tmpl == nil {
-			return fmt.Errorf("no template found for ISO: %s", iso)
-		}
+		templateKey := b.getTemplateKeyFromIso(strings.ToLower(base))
+
+		tmpl := b.loadTemplate(templateKey)
 
 		var entry strings.Builder
 		data := EntryData{
@@ -125,7 +101,7 @@ func (b *CFGBuilder) insertIsoSpecificTemplates() error {
 			return fmt.Errorf("failed to execute template for %s: %w", iso, err)
 		}
 
-		_, err := b.file.WriteString(entry.String() + "\n")
+		_, err := b.cfgFile.WriteString(entry.String() + "\n")
 		if err != nil {
 			return err
 		}
@@ -134,9 +110,56 @@ func (b *CFGBuilder) insertIsoSpecificTemplates() error {
 }
 
 func (b *CFGBuilder) GetResult() error {
-	if b.file != nil {
-		defer b.file.Close()
-		return b.file.Sync()
+	if b.cfgFile != nil {
+		defer b.cfgFile.Close()
+		return b.cfgFile.Sync()
 	}
 	return fmt.Errorf("grub.cfg file was not created or processed")
+}
+
+func (b *CFGBuilder) getTemplateKeyFromIso(lowerBase string) TemplateKey {
+	switch {
+	case strings.Contains(lowerBase, string(DistroDebian)):
+		archKey := detectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: DistroDebian, Arch: archKey}
+		return templateKey
+
+	case strings.Contains(lowerBase, string(DistroPopOS)):
+		archKey := detectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: DistroPopOS, Arch: archKey}
+		return templateKey
+	case strings.Contains(lowerBase, string(DistroUbuntu)):
+		archKey := detectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: DistroDebian, Arch: archKey}
+		return templateKey
+
+	case strings.Contains(lowerBase, string(DistroManjaro)):
+		archKey := detectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: DistroManjaro, Arch: archKey}
+		return templateKey
+
+	case strings.Contains(lowerBase, string(DistroArch)):
+		archKey := detectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: DistroArch, Arch: archKey}
+		return templateKey
+
+	case strings.Contains(lowerBase, string(DistroFedora)):
+		archKey := detectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: DistroFedora, Arch: archKey}
+		return templateKey
+
+	default:
+		return TemplateKey{Distro: DistroGeneric, Arch: ArchUnknown}
+	}
+}
+
+func (b *CFGBuilder) getRawTemplate(templateName string) (string, error) {
+	filePath := "templates/" + templateName
+
+	content, err := b.grubTemplatesFS.ReadFile(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read template file: %w", err)
+	}
+
+	return string(content), nil
 }

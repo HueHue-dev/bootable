@@ -7,16 +7,44 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 )
+
+//go:embed all:templates/*
+var grubTemplatesFS embed.FS
 
 type EntryData struct {
 	MenuTitle string
 	ISOPath   string
 }
 
-//go:embed all:templates/*
-var grubTemplatesFS embed.FS
+type DistroType string
+
+const (
+	DistroArch      DistroType = "arch"
+	DistroDebian    DistroType = "debian"
+	DistroFedora    DistroType = "fedora"
+	DistroManjaro   DistroType = "manjaro"
+	DistroPopOS     DistroType = "pop-os"
+	DistroUbuntu    DistroType = "ubuntu"
+	DistroLinuxMint DistroType = "linuxmint"
+	DistroCentOS    DistroType = "centos"
+	DistroGeneric   DistroType = "generic"
+)
+
+type ArchitectureType string
+
+const (
+	ArchX86_64  ArchitectureType = "x86_64"
+	ArchAMD64   ArchitectureType = "amd64"
+	ArchI386    ArchitectureType = "i386"
+	ArchAarch64 ArchitectureType = "aarch64"
+	ArchUnknown ArchitectureType = "Unknown"
+)
+
+type TemplateKey struct {
+	Distro DistroType
+	Arch   ArchitectureType
+}
 
 func Install(devicePath, mountPoint string) error {
 	bootDir := filepath.Join(mountPoint, "boot")
@@ -60,46 +88,16 @@ func WriteConfig(mountPoint string, isoPaths []string) error {
 	return configurator.Construct()
 }
 
-func pickTemplateForISO(lowerBase string, templateMap map[string]*template.Template) *template.Template {
-	switch {
-	case strings.Contains(lowerBase, "debian"),
-		strings.Contains(lowerBase, "linuxmint"):
-		return templateMap["debian"]
-
-	case strings.Contains(lowerBase, "pop-os"),
-		strings.Contains(lowerBase, "ubuntu"):
-		return templateMap["pop-os"]
-
-	case strings.Contains(lowerBase, "manjaro"):
-		return templateMap["manjaro"]
-
-	case strings.Contains(lowerBase, "arch"),
-		strings.Contains(lowerBase, "archlinux"):
-		return templateMap["arch"]
-
-	case strings.Contains(lowerBase, "fedora"),
-		strings.Contains(lowerBase, "centos"):
-		return templateMap["fedora"]
-
-	case strings.Contains(lowerBase, "opensuse"),
-		strings.Contains(lowerBase, "suse"):
-		return templateMap["opensuse"]
-
-	case strings.Contains(lowerBase, "alpine"):
-		return templateMap["alpine"]
-
-	default:
-		return templateMap["generic"]
+func detectArchitecture(lowerBase string) ArchitectureType {
+	if strings.Contains(lowerBase, "x86_64") || strings.Contains(lowerBase, "amd64") {
+		return ArchX86_64
 	}
-}
-
-func getRawTemplate(templateName string, templatesFS embed.FS) (string, error) {
-	filePath := "templates/" + templateName
-
-	content, err := templatesFS.ReadFile(filePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read template file: %w", err)
+	if strings.Contains(lowerBase, "i386") || strings.Contains(lowerBase, "x86") {
+		return ArchI386
+	}
+	if strings.Contains(lowerBase, "aarch") || strings.Contains(lowerBase, "arm64") {
+		return ArchAarch64
 	}
 
-	return string(content), nil
+	return ArchUnknown
 }
