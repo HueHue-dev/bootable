@@ -29,10 +29,10 @@ Currently, the following distributions and architectures are explicitly supporte
 *   **Arch Linux:**
     *   `x86_64` (e.g., `arch-x86_64.iso`)
 
-*   **Debian / Ubuntu:**
-    *   `AMD64` (commonly found as `amd64` or `x86_64` in the filename, e.g., `debian-live-12.5.0-amd64.iso`, `linuxmint-21.3-cinnamon-64bit.iso`)
+*   **Debian:**
+    *   `AMD64` (commonly found as `amd64` or `x86_64` in the filename, e.g., `debian-live-12.5.0-amd64.iso`)
 
-*   **Fedora / CentOS:**
+*   **Fedora:**
     *   `x86_64` (e.g., `Fedora-Workstation-Live-x86_64-39.iso`)
     *   `Aarch64` (if `fedora-aarch.tpl` is available and mapped, e.g., `Fedora-Workstation-Live-aarch64-39.iso`)
 
