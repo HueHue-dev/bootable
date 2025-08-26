@@ -1,11 +1,11 @@
-package disk
+package system
 
 import (
 	"fmt"
 	"os/exec"
 	"time"
 
-	"bootable/internal/helper"
+	"bootable/helper"
 )
 
 func Format(devicePath, label string) error {

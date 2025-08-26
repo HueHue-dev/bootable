@@ -1,4 +1,4 @@
-package grub
+package configurator
 
 type GrubConfigurator struct {
 	builder ICFGBuilder

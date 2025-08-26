@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"bootable/internal/disk"
-	"bootable/internal/grub"
-	"bootable/internal/helper"
+	"bootable/grub"
+	"bootable/helper"
+	"bootable/system"
 )
 
 var (
@@ -47,13 +47,13 @@ var createCmd = &cobra.Command{
 		}
 
 		fmt.Println("Partitioning and formatting device...")
-		if err := disk.Format(devicePath, "MULTIBOOT"); err != nil {
+		if err := system.Format(devicePath, "MULTIBOOT"); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to format device: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Println("Partitioning and formatting completed.")
 
-		part := disk.PartitionPath(devicePath, 1)
+		part := system.PartitionPath(devicePath, 1)
 		mountPoint, err := os.MkdirTemp("", "bootable-mnt-*")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to create temp mount dir: %v\n", err)

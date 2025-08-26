@@ -1,6 +1,7 @@
-package grub
+package configurator
 
 import (
+	"bootable/system"
 	"embed"
 	"fmt"
 	"os"
@@ -25,6 +26,16 @@ type CFGBuilder struct {
 	grubTemplatesFS embed.FS
 	cfgFile         *os.File
 	grubCfgPath     string
+}
+
+type TemplateKey struct {
+	Distro system.DistroType
+	Arch   system.ArchitectureType
+}
+
+type EntryData struct {
+	MenuTitle string
+	ISOPath   string
 }
 
 func NewCFGBuilder() *CFGBuilder {
@@ -117,42 +128,6 @@ func (b *CFGBuilder) GetResult() error {
 	return fmt.Errorf("grub.cfg file was not created or processed")
 }
 
-func (b *CFGBuilder) getTemplateKeyFromIso(lowerBase string) TemplateKey {
-	switch {
-	case strings.Contains(lowerBase, string(DistroDebian)):
-		archKey := detectArchitecture(lowerBase)
-		templateKey := TemplateKey{Distro: DistroDebian, Arch: archKey}
-		return templateKey
-
-	case strings.Contains(lowerBase, string(DistroPopOS)):
-		archKey := detectArchitecture(lowerBase)
-		templateKey := TemplateKey{Distro: DistroPopOS, Arch: archKey}
-		return templateKey
-	case strings.Contains(lowerBase, string(DistroUbuntu)):
-		archKey := detectArchitecture(lowerBase)
-		templateKey := TemplateKey{Distro: DistroDebian, Arch: archKey}
-		return templateKey
-
-	case strings.Contains(lowerBase, string(DistroManjaro)):
-		archKey := detectArchitecture(lowerBase)
-		templateKey := TemplateKey{Distro: DistroManjaro, Arch: archKey}
-		return templateKey
-
-	case strings.Contains(lowerBase, string(DistroArch)):
-		archKey := detectArchitecture(lowerBase)
-		templateKey := TemplateKey{Distro: DistroArch, Arch: archKey}
-		return templateKey
-
-	case strings.Contains(lowerBase, string(DistroFedora)):
-		archKey := detectArchitecture(lowerBase)
-		templateKey := TemplateKey{Distro: DistroFedora, Arch: archKey}
-		return templateKey
-
-	default:
-		return TemplateKey{Distro: DistroGeneric, Arch: ArchUnknown}
-	}
-}
-
 func (b *CFGBuilder) getRawTemplate(templateName string) (string, error) {
 	filePath := "templates/" + templateName
 
@@ -162,4 +137,41 @@ func (b *CFGBuilder) getRawTemplate(templateName string) (string, error) {
 	}
 
 	return string(content), nil
+}
+
+func (b *CFGBuilder) getTemplateKeyFromIso(lowerBase string) TemplateKey {
+	switch {
+	case strings.Contains(lowerBase, string(system.DistroDebian)):
+		archKey := system.DetectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: system.DistroDebian, Arch: archKey}
+		return templateKey
+
+	case strings.Contains(lowerBase, string(system.DistroPopOS)):
+		archKey := system.DetectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: system.DistroPopOS, Arch: archKey}
+		return templateKey
+
+	case strings.Contains(lowerBase, string(system.DistroUbuntu)):
+		archKey := system.DetectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: system.DistroDebian, Arch: archKey}
+		return templateKey
+
+	case strings.Contains(lowerBase, string(system.DistroManjaro)):
+		archKey := system.DetectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: system.DistroManjaro, Arch: archKey}
+		return templateKey
+
+	case strings.Contains(lowerBase, string(system.DistroArch)):
+		archKey := system.DetectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: system.DistroArch, Arch: archKey}
+		return templateKey
+
+	case strings.Contains(lowerBase, string(system.DistroFedora)):
+		archKey := system.DetectArchitecture(lowerBase)
+		templateKey := TemplateKey{Distro: system.DistroFedora, Arch: archKey}
+		return templateKey
+
+	default:
+		return TemplateKey{Distro: system.DistroGeneric, Arch: system.ArchUnknown}
+	}
 }

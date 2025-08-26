@@ -1,4 +1,4 @@
-package grub
+package configurator
 
 import (
 	"embed"
