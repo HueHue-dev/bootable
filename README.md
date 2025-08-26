@@ -29,7 +29,7 @@ Currently, the following distributions and architectures are explicitly supporte
 *   **Arch Linux:**
     *   `x86_64` (e.g., `arch-x86_64.iso`)
 
-*   **Debian / Linux Mint:**
+*   **Debian / Ubuntu:**
     *   `AMD64` (commonly found as `amd64` or `x86_64` in the filename, e.g., `debian-live-12.5.0-amd64.iso`, `linuxmint-21.3-cinnamon-64bit.iso`)
 
 *   **Fedora / CentOS:**
